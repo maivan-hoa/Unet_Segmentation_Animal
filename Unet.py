@@ -202,40 +202,55 @@ def getData(predict=0):
 
 
 def predict_Unet():
+    '''
     val_input_img_paths, val_target_img_paths = getData(predict=1)
     
     # Generate predictions for all images in the validation set
-    model = keras.load_model("./Segmentation_animal.h5")
+    model = keras.models.load_model("./Segmentation_animal.h5")
     val_gen = OxfordPets(batch_size, img_size, val_input_img_paths, val_target_img_paths)
     val_predicts = model.predict(val_gen)
     
     # Display image, target and mask predict i
-    i = 1
+    i = 180
     display(Image(filename=val_input_img_paths[i]))
     
     mask_truth = PIL.ImageOps.autocontrast(load_img(val_target_img_paths[i]))
     display(mask_truth)
     
-    mask = np.argmax(val_predicts[i], axis=-1)
+    mask = np.argmax(val_predicts[i], axis=-1)  # lấy giá trị max theo xác suất lớp tương ứng
+    mask = np.expand_dims(mask, axis=-1)  # do array_to_img yêu cầu mảng 3 chiều
     mask = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
     display(mask)
+    '''
+    
+    # Predict image download from internet
+    model = keras.models.load_model("./Segmentation_animal.h5")
+    img = load_img('./dogtest.jpg', target_size=img_size)
+    display(img)
+    img = np.expand_dims(img, axis=0) # yêu cầu mảng 4 chiều, chiều đầu tiên là số ảnh cần predict
+    mask_pred = model.predict(img)
+    mask_pred = np.argmax(mask_pred[0], axis=-1)  # lấy mask đầu tiên (trng trường hợp cần predict nhiều ảnh)
+    mask_pred = np.expand_dims(mask_pred, axis=-1)
+    mask_pred = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask_pred))
+    display(mask_pred)
     
     
 if __name__ == '__main__':
     
-    # Free up RAM in case the model definition cells were run multiple times
-    keras.backend.clear_session()
-    model = unet(160, 160)
-    callbacks = [
-        keras.callbacks.ModelCheckpoint("Segmentation_animal.h5", save_best_only=True)
-    ]
+    # # Free up RAM in case the model definition cells were run multiple times
+    # keras.backend.clear_session()
+    # model = unet(160, 160)
+    # callbacks = [
+    #     keras.callbacks.ModelCheckpoint("Segmentation_animal.h5", save_best_only=True)
+    # ]
     
-    train , val = getData()
-    model.fit(train, validation_data= val, epochs=epoch, callbacks=callbacks)  # step_per_epoch = 199 do len(train_gen)= 199, dữ liệu đã lấy một phần cho tập valid
-    '''
-    lấy dữ liệu mỗi batch bằng cách gọi train[idx] ~ __getitem__(idx)
-    '''
+    # train , val = getData()
+    # model.fit(train, validation_data= val, epochs=epoch, callbacks=callbacks)  # step_per_epoch = 199 do len(train_gen)= 199, dữ liệu đã lấy một phần cho tập valid
+    # '''
+    # lấy dữ liệu mỗi batch bằng cách gọi train[idx] ~ __getitem__(idx)
+    # '''
     
+    predict_Unet()
 
     
 
